@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title data-i18n="header.title">星空Labo| AR HUD 观星纸盒</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://unpkg.com/splitting@1.0.6/dist/splitting.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/splitting@1.0.6/dist/splitting.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --kraft-color: #D4A574;
+            --deep-space-blue: #0B1426;
+            --star-gold: #F4E4BC;
+            --moon-silver: #E8E8E8;
+            --nebula-purple: #2D1B45;
+            --deep-brown: #8B4513;
+            --success-green: #4A7C59;
+            --warning-orange: #D2691E;
+            --link-blue: #4A90E2;
+        }
+        
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background: linear-gradient(135deg, var(--deep-space-blue) 0%, var(--nebula-purple) 100%);
+            color: var(--moon-silver);
+            overflow-x: hidden;
+        }
+        
+        .hero-title {
+            font-family: 'Noto Serif SC', serif;
+            background: linear-gradient(45deg, var(--kraft-color), var(--star-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .kraft-texture {
+            background-image: url('resources/kraft-texture.jpg');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+        
+        .kraft-texture::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(212, 165, 116, 0.1);
+            backdrop-filter: blur(1px);
+        }
+        
+        .star-field {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20px 30px, var(--star-gold), transparent),
+                radial-gradient(2px 2px at 40px 70px, var(--moon-silver), transparent),
+                radial-gradient(1px 1px at 90px 40px, var(--star-gold), transparent),
+                radial-gradient(1px 1px at 130px 80px, var(--moon-silver), transparent);
+            background-repeat: repeat;
+            background-size: 200px 100px;
+            animation: sparkle 20s linear infinite;
+        }
+        
+        @keyframes sparkle {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 1; }
+        }
+        
+        .floating-element {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .glow-effect {
+            box-shadow: 0 0 20px rgba(244, 228, 188, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .glow-effect:hover {
+            box-shadow: 0 0 30px rgba(244, 228, 188, 0.5);
+            transform: translateY(-2px);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(212, 165, 116, 0.2);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            border-color: var(--kraft-color);
+        }
+        
+        .text-gradient {
+            background: linear-gradient(45deg, var(--kraft-color), var(--star-gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .comparison-slider {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+        }
+        
+        .comparison-slider img {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+        
+        .nav-link {
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--kraft-color);
+            transition: width 0.3s ease;
+        }
+        
+        .nav-link:hover::after {
+            width: 100%;
+        }
+        
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--kraft-color), var(--star-gold));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: var(--deep-space-blue);
+            margin: 0 auto 16px;
+        }
+        
+        .cost-calculator {
+            background: rgba(11, 20, 38, 0.8);
+            border: 1px solid rgba(212, 165, 116, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .slider-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(212, 165, 116, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--kraft-color);
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(212, 165, 116, 0.5);
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--kraft-color);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(212, 165, 116, 0.5);
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(30px);
+            animation: fadeInUp 0.8s ease forwards;
+        }
+        
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .delay-1 { animation-delay: 0.2s; }
+        .delay-2 { animation-delay: 0.4s; }
+        .delay-3 { animation-delay: 0.6s; }
+        .delay-4 { animation-delay: 0.8s; }
+        
+        #cartoon {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+            margin: 2rem 0;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            
+        }
+        
+        #left {
+            flex: 0 0 70%;
+            min-width: 0;
+           
+        }
+        
+        #right {
+            flex: 0 0 30%;
+            min-width: 0;
+          
+        }
+        
+        #left {
+            position: relative;
+            padding-bottom: 56.25%; /* 16:9 宽高比 */
+            height: 0;
+            overflow: hidden;
+        }
+        
+        #left iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        /* Image Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.9);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+        
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #f1f1f1;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        .clickable-img {
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        
+        .clickable-img:hover {
+            transform: scale(1.02);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="fixed top-0 w-full z-50 bg-black bg-opacity-50 backdrop-blur-md border-b border-opacity-20 border-gray-400">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <h1 class="text-xl font-bold text-gradient" data-i18n="header.title">星空Labo| AR HUD 观星纸盒</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-center space-x-8">
+                        <div class="flex space-x-4">
+                            <a href="#home" class="nav-link text-white hover:text-yellow-300 px-3 py-2 text-sm font-medium" data-i18n="nav.home">返回顶部</a>
+                            <a href="#beginMake" class="nav-link text-white hover:text-yellow-300 px-3 py-2 text-sm font-medium" data-i18n="nav.start">开始制作</a>
+                            <a href="#show" class="nav-link text-white hover:text-yellow-300 px-3 py-2 text-sm font-medium" data-i18n="nav.showcase">效果展示</a>
+                            <a href="#about" class="nav-link text-white hover:text-yellow-300 px-3 py-2 text-sm font-medium" data-i18n="nav.about">技术原理</a>
+                        </div>
+                        <div class="flex items-center space-x-2 border-l border-gray-600 pl-4 ml-4">
+                            <button onclick="changeLanguage('zh')" class="text-white hover:text-yellow-300 px-2 py-1 text-sm font-medium">中文</button>
+                            <span class="text-gray-400">|</span>
+                            <button onclick="changeLanguage('en')" class="text-white hover:text-yellow-300 px-2 py-1 text-sm font-medium">English</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-white hover:text-yellow-300 focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="mobile-menu" class="md:hidden hidden bg-black bg-opacity-80 backdrop-blur-md">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home" class="text-white hover:text-yellow-300 block px-3 py-2 text-base font-medium">首页</a>
+                <a href="#beginMake" class="text-white hover:text-yellow-300 block px-3 py-2 text-base font-medium">3D教程</a>
+                <a href="#show" class="text-white hover:text-yellow-300 block px-3 py-2 text-base font-medium">效果展示</a>
+                <a href="#about" class="text-white hover:text-yellow-300 block px-3 py-2 text-base font-medium">技术原理</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero区域 -->
+    <section id="home" class="relative min-h-screen flex items-center justify-center pt-16">
+        <div class="star-field"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left">
+                    <h1 class="hero-title text-5xl md:text-7xl font-bold mb-6 fade-in-up" align="center" data-i18n="hero.title">
+                  组装你的第一台AR观星装置&nbsp; </h1>
+                    <p class="text-xl md:text-2xl mb-8 text-gray-300 fade-in-up delay-1 whitespace-pre-line" align="center" data-i18n="hero.subtitle">
+                        牛皮纸+手机+光学镜片                   
+						将虚拟星空信息直接叠加于真实夜空
+                    </p>
+                    
+                </div>
+                <div class="floating-element fade-in-up delay-3">
+                    <img src="resources/1ch.png" alt="AR观星装置" class="w-full max-w-lg mx-auto rounded-2xl shadow-2xl">
+                </div>
+            </div>
+        </div>
+    </section>
+
+	<!-- 开始制作 -->
+    <section id="beginMake" class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gradient fade-in-up" data-i18n="start.title">开始制作</h2>
+                <p class="text-xl text-gray-300 fade-in-up delay-1" data-i18n="start.subtitle">轻量级手工DIY，10分钟内完成组装</p>
+            </div>
+            <div id="cartoon">
+                <div id="left">
+                    <iframe src="https://app.vectary.com/p/3G06DtCB5w9jrGtVsCR6Fl" allow="xr-spatial-tracking; fullscreen;"></iframe>
+                </div>
+                <div id="right">
+                    <h3 class="text-2xl font-bold mb-4 text-gradient" data-i18n="start.steps.title">制作步骤</h3>
+                    <ul class="space-y-3 text-gray-300">
+                        <li class="flex items-start">
+                            <span class="text-yellow-400 mr-2">★</span>
+                            <span data-i18n="start.steps.1">手机下载打开STAR Labo AR HUD应用</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-yellow-400 mr-2">★</span>
+                            <span data-i18n="start.steps.2">牛皮纸板中拆卸制作部件，制作AR HUD盒子</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-yellow-400 mr-2">★</span>
+                            <span data-i18n="start.steps.3">卡扣好光学镜片组</span>
+                        </li>
+                        <li class="flex items-start">
+                            <span class="text-yellow-400 mr-2">★</span>
+                            <span data-i18n="start.steps.4">对准星空，查看AR信息</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+                               
+        </div>
+            </div>
+           
+        </div>
+    </section>
+
+    <!-- 效果展示 -->
+	 <section class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gradient fade-in-up" data-i18n="showcase.title">效果展示</h2>
+                <p class="text-xl text-gray-300 fade-in-up delay-1" data-i18n="showcase.subtitle">无边界融合，沉浸式星空观测</p>
+            </div>
+            
+            <div id="show" class="flex gap-8">
+                
+                <div id="Montin" class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-1" style="flex: 0 0 30%;">
+                    <img src="resources/2ch.png" alt="AR观星装置" class="clickable-img w-full max-w-lg mx-auto rounded-2xl shadow-2xl" onclick="openModal(this)">
+                </div>
+                
+
+                                   
+
+                <div id="forest" class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-2" style="flex: 0 0 30%;">
+                    <img src="resources/公园ch.jpg" alt="AR观星装置" class="clickable-img w-full max-w-lg mx-auto rounded-2xl shadow-2xl" onclick="openModal(this)">
+                </div>
+                  
+                <div id="hotel" class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-2 flex items-center justify-center" style="width: 40%;">
+                    <img src="resources/酒店ch.jpg" alt="AR观星装置" class="clickable-img max-w-full h-auto rounded-2xl shadow-2xl" onclick="openModal(this)">
+                </div>
+            </div>
+            <div class="flex gap-8">
+                  
+               
+            </div>
+        </div>
+
+        
+    </section>
+    <!-- 核心优势 -->
+    <section class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gradient fade-in-up" data-i18n="features.title">为什么选择DIY AR观星装置？</h2>
+                <p class="text-xl text-gray-300 fade-in-up delay-1" data-i18n="features.subtitle">更有趣、更便宜、更直观、更清晰</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-1">
+                    <div class="feature-icon">🎯</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gradient" data-i18n="feature1.title">趣味十足</h3>
+                    <p class="text-gray-300 mb-6" data-i18n="feature1.desc">牛皮纸DIY手工制作，让星空更环保有趣</p>
+                    <div class="text-3xl font-bold text-pink-400" data-i18n="feature1.tag1">10分钟组装</div>
+                    <div class="text-sm text-gray-400" data-i18n="feature1.tag2">户外露营观星、亲子活动</div>
+                </div>
+
+                <div class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-2">
+                <div class="feature-icon">💰</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gradient" data-i18n="feature2.title">更便宜</h3>
+                    <p class="text-gray-300 mb-6" data-i18n="feature2.desc">利用手机作为显示与计算单元，硬件成本降低95%</p>
+                    <div class="text-3xl font-bold text-green-400" data-i18n="feature2.price">¥100-200</div>
+                    <div class="text-sm text-gray-400" data-i18n="feature2.compare">vs 传统AR眼镜 ¥2000-5000</div>
+                    </div>
+                
+                <div class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-3">
+                    <div class="feature-icon">👁️</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gradient" data-i18n="feature3.title">更直观的体验</h3>
+                    <p class="text-gray-300 mb-6" data-i18n="feature3.desc">虚像与真实星空光学叠加，无边界自然融合观察</p>
+                    <div class="text-3xl font-bold text-blue-400">≥45°</div>
+                    <div class="text-sm text-gray-400" data-i18n="feature3.tag">大视场双目AR</div>
+                </div>
+                
+                <div class="card-hover bg-black bg-opacity-30 rounded-2xl p-8 text-center fade-in-up delay-4">
+                    <div class="feature-icon">✨</div>
+                    <h3 class="text-2xl font-bold mb-4 text-gradient" data-i18n="feature4.title">更清晰的观测</h3>
+                    <p class="text-gray-300 mb-6" data-i18n="feature4.desc">直接观测及标注真实星空，避免相机夜空捕获画质限制</p>
+                    <div class="text-3xl font-bold text-yellow-400">100%</div>
+                    <div class="text-sm text-gray-400" data-i18n="feature4.tag">真实星空画质</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 对比展示 -->
+    <section id="show" class="py-20 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gradient fade-in-up" data-i18n="comparison.title">传统 vs DIY AR观星</h2>
+                <p class="text-xl text-gray-300 fade-in-up delay-1" data-i18n="comparison.subtitle">体验更自然、更沉浸的观星方式</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                <div class="fade-in-up delay-1">
+                    <img src="resources/对比图.jpg" alt="对比展示" class="w-full rounded-2xl shadow-2xl">
+                </div>
+                <div class="space-y-8 fade-in-up delay-2">
+                    <div class="flex items-start space-x-4">
+                        <div class="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <span class="text-white text-sm">×</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-red-400" data-i18n="comparison.traditional.title">传统手机AR观星</h3>
+                            <ul class="text-gray-300 space-y-1">
+                                <li data-i18n="comparison.traditional.1">• 相机捕获星空后显示，夜间低光画质天然受限</li>
+                                <li data-i18n="comparison.traditional.2">• 屏幕与现实星空分离，放下手机还是不认识星空</li>
+                                <li data-i18n="comparison.traditional.3">• 现实星空被手机屏幕遮挡，体验不连贯</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start space-x-4">
+                        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-1">
+                            <span class="text-white text-sm">✓</span>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold mb-2 text-green-400" data-i18n="comparison.diy.title">DIY AR观星装置</h3>
+                            <ul class="text-gray-300 space-y-1">
+                                <li data-i18n="comparison.diy.1">• 直接肉眼观测，画质无损</li>
+                                <li data-i18n="comparison.diy.2">• 虚拟信息与真实星空完美融合，真实星空直接标注</li>
+                                <li data-i18n="comparison.diy.3">• 无边界透视融合，沉浸式星空观测</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术原理 -->
+    <section id="about" class="py-20 relative">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16">
+                <h2 class="text-4xl md:text-5xl font-bold mb-6 text-gradient fade-in-up" data-i18n="about.title">技术原理</h2>
+                <p class="text-xl text-gray-300 fade-in-up delay-1" data-i18n="about.desc">通过手机传感器计算实时星图投影，透镜组将手机屏幕投影至3-5米远处，同真实星空至眼睛光路重叠。（中国实用新型专利,申请号 2025224572824）</p>
+            </div>
+            
+           
+        </div>
+    </section>
+
+  
+
+    <!-- 页脚 -->
+    <footer class="bg-black bg-opacity-50 py-12 relative">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <h3 class="text-2xl font-bold text-gradient mb-4" data-i18n="footer.title">AR观星装置</h3>
+                <p class="text-gray-500 text-sm" data-i18n="footer.tagline">用创新科技，让星空触手可及</p>
+                <div class="flex justify-center space-x-6 mb-6">
+                    <a href="#" class="text-gray-500 hover:text-yellow-300 transition-colors duration-300">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"/>
+                    </svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-yellow-300 transition-colors duration-300">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M22.46 6c-.77.35-1.6.58-2.46.69.88-.53 1.56-1.37 1.88-2.38-.83.5-1.75.85-2.72 1.05C18.37 4.5 17.26 4 16 4c-2.35 0-4.27 1.92-4.27 4.29 0 .34.04.67.11.98C8.28 9.09 5.11 7.38 3 4.79c-.37.63-.58 1.37-.58 2.15 0 1.49.75 2.81 1.91 3.56-.71 0-1.37-.2-1.95-.5v.03c0 2.08 1.48 3.82 3.44 4.21a4.22 4.22 0 0 1-1.93.07 4.28 4.28 0 0 0 4 2.98 8.521 8.521 0 0 1-5.33 1.84c-.34 0-.68-.02-1.02-.06C3.44 20.29 5.7 21 8.12 21 16 21 20.33 14.46 20.33 8.79c0-.19 0-.37-.01-.56.84-.6 1.56-1.36 2.14-2.23z"/>
+                    </svg>
+                    </a>
+                    <a href="#" class="text-gray-500 hover:text-yellow-300 transition-colors duration-300">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 5.079 3.158 9.417 7.618 11.174-.105-.949-.199-2.403.042-3.441.219-.937 1.407-5.965 1.407-5.965s-.359-.72-.359-1.781c0-1.663.967-2.911 2.168-2.911 1.024 0 1.518.769 1.518 1.688 0 1.029-.653 2.567-.992 3.992-.285 1.193.6 2.165 1.775 2.165 2.128 0 3.768-2.245 3.768-5.487 0-2.861-2.063-4.869-5.008-4.869-3.41 0-5.409 2.562-5.409 5.199 0 1.033.394 2.143.889 2.741.099.12.112.225.085.345-.09.375-.293 1.199-.334 1.363-.053.225-.172.271-.402.165-1.495-.69-2.433-2.878-2.433-4.646 0-3.776 2.748-7.252 7.92-7.252 4.158 0 7.392 2.967 7.392 6.923 0 4.135-2.607 7.462-6.233 7.462-1.214 0-2.357-.629-2.75-1.378l-.748 2.853c-.271 1.043-1.002 2.35-1.492 3.146C9.57 23.812 10.763 24.009 12.017 24.009c6.624 0 11.99-5.367 11.99-11.988C24.007 5.367 18.641.001 12.017.001z"/>
+                    </svg>
+                    </a>
+                </div>
+                <p class="text-gray-500 text-sm"> © 2025 王腾</p>
+                <p class="text-gray-500 text-sm"> Email: wangteng604@gmail.com</p>
+                
+            </div>
+        </div>
+    </footer>
+
+  
+
+    <!-- The Modal -->
+    <div id="imageModal" class="modal">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
+    <script>
+        // 多语言支持
+        const translations = {
+            'zh': {
+                'nav.home': '返回顶部',
+                'nav.start': '开始制作',
+                'nav.showcase': '效果展示',
+                'nav.about': '技术原理',
+                'header.title': '星空Labo| AR HUD 观星纸盒',
+                'hero.title': '组装你的第一台AR观星装置',
+                'hero.subtitle': '牛皮纸+手机+光学镜片\n将虚拟星空信息直接叠加于真实夜空',
+                'start.title': '开始制作',
+                'start.subtitle': '轻量级手工DIY，10分钟内完成组装',
+                'start.steps.title': '制作步骤',
+                'start.steps.1': '手机下载打开STAR Labo AR HUD应用',
+                'start.steps.2': '牛皮纸板中拆卸制作部件，制作AR HUD盒子',
+                'start.steps.3': '卡扣好光学镜片组',
+                'start.steps.4': '对准星空，查看AR信息',
+                'showcase.title': '效果展示',
+                'showcase.subtitle': '无边界融合，沉浸式星空观测',
+                'features.title': '为什么选择DIY AR观星装置？',
+                'features.subtitle': '更有趣、更便宜、更直观、更清晰',
+                'feature1.title': '趣味十足',
+                'feature1.desc': '牛皮纸DIY手工制作，让星空更环保有趣',
+                'feature1.tag1': '10分钟组装',
+                'feature1.tag2': '户外露营观星、亲子活动',
+                'feature2.title': '更便宜',
+                'feature2.desc': '利用手机作为显示与计算单元，硬件成本降低95%',
+                'feature2.price': '¥100-200',
+                'feature2.compare': 'vs 传统AR眼镜 ¥2000-5000',
+                'feature3.title': '更直观的体验',
+                'feature3.desc': '虚像与真实星空光学叠加，无边界自然融合观察',
+                'feature3.tag': '大视场双目AR',
+                'feature4.title': '更清晰的观测',
+                'feature4.desc': '直接观测及标注真实星空，避免相机夜空捕获画质限制',
+                'feature4.tag': '真实星空画质',
+                'comparison.title': '传统 vs DIY AR观星',
+                'comparison.subtitle': '体验更自然、更沉浸的观星方式',
+                'comparison.traditional.title': '传统手机AR观星',
+                'comparison.traditional.1': '相机捕获星空后显示，夜间低光画质天然受限',
+                'comparison.traditional.2': '屏幕与现实星空分离，放下手机还是不认识星空',
+                'comparison.traditional.3': '现实星空被手机屏幕遮挡，体验不连贯',
+                'comparison.diy.title': 'DIY AR观星装置',
+                'comparison.diy.1': '直接肉眼观测，画质无损',
+                'comparison.diy.2': '虚拟信息与真实星空完美融合，真实星空直接标注',
+                'comparison.diy.3': '无边界透视融合，沉浸式星空观测',
+                'about.title': '技术原理',
+                'about.desc': '通过手机传感器计算实时星图投影，透镜组将手机屏幕投影至3-5米远处，同真实星空至眼睛光路重叠。（中国实用新型专利,申请号 2025224572824）',
+                'footer.title': 'AR观星装置',
+                'footer.tagline': '用创新科技，让星空触手可及'
+            },
+            'en': {
+                'nav.home': 'Home',
+                'nav.start': 'Get Started',
+                'nav.showcase': 'Showcase',
+                'nav.about': 'Technology',
+                'header.title': 'Starry Labo | AR HUD Cardboard Stargazing Kit',
+                'hero.title': 'Build Your First AR Stargazing Device',
+                'hero.subtitle': 'Kraft Paper + Smartphone + Optical Lens\nOverlay Virtual Star Information on Real Night Sky',
+                'start.title': 'Get Started',
+                'start.subtitle': 'Lightweight DIY, Assemble in 10 Minutes',
+                'start.steps.title': 'Assembly Steps',
+                'start.steps.1': 'Download and open STAR Labo AR HUD app',
+                'start.steps.2': 'Assemble the AR HUD box from kraft paper parts',
+                'start.steps.3': 'Install the optical lens set',
+                'start.steps.4': 'Aim at the night sky and view AR information',
+                'showcase.title': 'Showcase',
+                'showcase.subtitle': 'Seamless Integration, Immersive Stargazing Experience',
+                'features.title': 'Why Choose DIY AR Stargazing?',
+                'features.subtitle': 'More Fun, Affordable, Intuitive, and Clearer',
+                'feature1.title': 'Fun & Engaging',
+                'feature1.desc': 'Eco-friendly kraft paper DIY for a more interesting stargazing experience',
+                'feature1.tag1': '10-Minute Assembly',
+                'feature1.tag2': 'Perfect for Camping & Family Activities',
+                'feature2.title': 'More Affordable',
+                'feature2.desc': 'Uses your smartphone as display and computer, reducing hardware cost by 95%',
+                'feature2.price': '$15-30',
+                'feature2.compare': 'vs $300-800 for Traditional AR Glasses',
+                'feature3.title': 'More Intuitive',
+                'feature3.desc': 'Optical overlay of virtual information on real night sky',
+                'feature3.tag': 'Wide FOV Binocular AR',
+                'feature4.title': 'Clearer Observation',
+                'feature4.desc': 'Direct observation of real stars without camera quality limitations',
+                'feature4.tag': 'True Night Sky Quality',
+                'comparison.title': 'Traditional vs DIY AR Stargazing',
+                'comparison.subtitle': 'Experience More Natural and Immersive Stargazing',
+                'comparison.traditional.title': 'Traditional Smartphone AR',
+                'comparison.traditional.1': 'Camera captures stars with low-light quality limitations',
+                'comparison.traditional.2': 'Screen separates you from the real night sky',
+                'comparison.traditional.3': 'Phone screen blocks your view of the actual stars',
+                'comparison.diy.title': 'DIY AR Stargazing',
+                'comparison.diy.1': 'Direct naked-eye observation, no quality loss',
+                'comparison.diy.2': 'Seamless integration of virtual info with real stars',
+                'comparison.diy.3': 'Borderless AR experience, fully immersive stargazing',
+                'about.title': 'Technology',
+                'about.desc': 'Real-time star map projection using smartphone sensors, with lens group projecting phone screen 3-5 meters away, overlapping with the optical path of real stars to your eyes. (Chinese Utility Model Patent, Application No. 2025224572824)',
+                'footer.title': 'AR Stargazing Device',
+                'footer.tagline': 'Innovative Technology, Bringing the Stars to Your Fingertips'
+            }
+        };
+
+        let currentLanguage = localStorage.getItem('language') || 'zh';
+
+        function updateImageSources(lang) {
+            // Update all images with language-specific versions
+            document.querySelectorAll('img[src*="ch"]').forEach(img => {
+                img.src = img.src.replace('ch', lang === 'en' ? 'en' : 'ch');
+            });
+        }
+
+        function updateContent(lang) {
+            // Update all elements with data-i18n attributes
+            document.querySelectorAll('[data-i18n]').forEach(element => {
+                const key = element.getAttribute('data-i18n');
+                if (translations[lang] && translations[lang][key]) {
+                    element.textContent = translations[lang][key];
+                }
+            });
+
+            // Update page title
+            document.title = translations[lang]?.['header.title'] || document.title;
+
+            // Update HTML lang attribute
+            document.documentElement.lang = lang;
+
+            // Save language preference
+            localStorage.setItem('language', lang);
+            currentLanguage = lang;
+
+            // Update image sources
+            updateImageSources(lang);
+        }
+
+        function changeLanguage(lang) {
+            updateContent(lang);
+        }
+
+        // Initialize with saved language or default to Chinese
+        document.addEventListener('DOMContentLoaded', () => {
+            updateContent(currentLanguage);
+            
+            // Add click handlers for language switcher buttons
+            document.querySelectorAll('[data-lang]').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    changeLanguage(button.getAttribute('data-lang'));
+                });
+            });
+        });
+
+        // 全局变量
+        let costCalculator = {
+            lens: 15,
+            beamSplitter: 8,
+            cardboard: 5,
+            accessories: 15
+        };
+
+        // DOM加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeNavigation();
+            initializeCostCalculator();
+            initializeAnimations();
+            initializeScrollEffects();
+        });
+
+        // 导航功能
+        function initializeNavigation() {
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                });
+            });
+        }
+
+        // 成本计算器
+        function initializeCostCalculator() {
+            const lensSelect = document.getElementById('lens-select');
+            const beamSplitterSelect = document.getElementById('beam-splitter-select');
+            const cardboardSelect = document.getElementById('cardboard-select');
+            const accessoriesSlider = document.getElementById('accessories-slider');
+            const accessoriesValue = document.getElementById('accessories-value');
+            
+            if (lensSelect) {
+                lensSelect.addEventListener('change', updateCostCalculation);
+            }
+            if (beamSplitterSelect) {
+                beamSplitterSelect.addEventListener('change', updateCostCalculation);
+            }
+            if (cardboardSelect) {
+                cardboardSelect.addEventListener('change', updateCostCalculation);
+            }
+            if (accessoriesSlider) {
+                accessoriesSlider.addEventListener('input', function() {
+                    accessoriesValue.textContent = `¥${this.value}`;
+                    costCalculator.accessories = parseInt(this.value);
+                    updateCostCalculation();
+                });
+            }
+        }
+
+        function updateCostCalculation() {
+            const lensSelect = document.getElementById('lens-select');
+            const beamSplitterSelect = document.getElementById('beam-splitter-select');
+            const cardboardSelect = document.getElementById('cardboard-select');
+            
+            if (lensSelect) costCalculator.lens = parseInt(lensSelect.value);
+            if (beamSplitterSelect) costCalculator.beamSplitter = parseInt(beamSplitterSelect.value);
+            if (cardboardSelect) costCalculator.cardboard = parseInt(cardboardSelect.value);
+            
+            // 更新显示
+            const lensCost = document.getElementById('lens-cost');
+            const beamSplitterCost = document.getElementById('beam-splitter-cost');
+            const cardboardCost = document.getElementById('cardboard-cost');
+            const accessoriesCost = document.getElementById('accessories-cost');
+            const totalCost = document.getElementById('total-cost');
+            const savingsPercent = document.getElementById('savings-percent');
+            
+            if (lensCost) lensCost.textContent = `¥${costCalculator.lens}`;
+            if (beamSplitterCost) beamSplitterCost.textContent = `¥${costCalculator.beamSplitter}`;
+            if (cardboardCost) cardboardCost.textContent = `¥${costCalculator.cardboard}`;
+            if (accessoriesCost) accessoriesCost.textContent = `¥${costCalculator.accessories}`;
+            
+            const total = costCalculator.lens + costCalculator.beamSplitter + costCalculator.cardboard + costCalculator.accessories;
+            if (totalCost) totalCost.textContent = `¥${total}`;
+            
+            // 计算节省比例（以传统AR设备平均价格3500元计算）
+            const traditionalCost = 3500;
+            const savings = ((traditionalCost - total) / traditionalCost * 100).toFixed(1);
+            if (savingsPercent) savingsPercent.textContent = `${savings}%`;
+        }
+
+        // 动画初始化
+        function initializeAnimations() {
+            // 使用Anime.js创建动画
+            anime.timeline({loop: false})
+                .add({
+                    targets: '.hero-title',
+                    translateY: [50, 0],
+                    opacity: [0, 1],
+                    duration: 1000,
+                    easing: 'easeOutExpo'
+                })
+                .add({
+                    targets: '.hero-subtitle',
+                    translateY: [30, 0],
+                    opacity: [0, 1],
+                    duration: 800,
+                    easing: 'easeOutExpo'
+                }, '-=600')
+                .add({
+                    targets: '.hero-cta',
+                    translateY: [30, 0],
+                    opacity: [0, 1],
+                    duration: 800,
+                    easing: 'easeOutExpo'
+                }, '-=600');
+
+            // 卡片悬停效果
+            document.querySelectorAll('.card-hover').forEach(card => {
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    
+                    card.style.setProperty('--mouse-x', `${x}px`);
+                    card.style.setProperty('--mouse-y', `${y}px`);
+                });
+            });
+        }
+
+        // 滚动效果
+        function initializeScrollEffects() {
+            // 滚动时显示/隐藏返回顶部按钮
+            window.addEventListener('scroll', function() {
+                const scrollToTop = document.getElementById('scroll-to-top');
+                if (window.pageYOffset > 300) {
+                    scrollToTop.classList.remove('opacity-0', 'invisible');
+                    scrollToTop.classList.add('opacity-100');
+                } else {
+                    scrollToTop.classList.remove('opacity-100');
+                    scrollToTop.classList.add('opacity-0', 'invisible');
+                }
+            });
+
+            // 滚动到顶部
+            document.getElementById('scroll-to-top')?.addEventListener('click', function() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            });
+        }
+
+        // 图片模态框功能
+        const modal = document.getElementById("imageModal");
+        const modalImg = document.getElementById("modalImage");
+        
+        function openModal(img) {
+            modal.style.display = "block";
+            modalImg.src = img.src;
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeModal() {
+            modal.style.display = "none";
+            document.body.style.overflow = 'auto';
+        }
+        
+        // 点击模态框外部关闭
+        modal.addEventListener('click', function(event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+        
+        // 按ESC键关闭
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+
+        // 星空粒子效果
+        function createStarField() {
+            const container = document.querySelector('.star-field');
+            if (!container) return;
+            
+            // 清空现有星星
+            container.innerHTML = '';
+            
+            // 创建星星
+            const starCount = 200;
+            for (let i = 0; i < starCount; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                
+                // 随机位置
+                const x = Math.random() * 100;
+                const y = Math.random() * 100;
+                
+                // 随机大小
+                const size = Math.random() * 2 + 1;
+                
+                // 随机透明度
+                const opacity = Math.random() * 0.8 + 0.2;
+                
+                // 应用样式
+                star.style.left = `${x}%`;
+                star.style.top = `${y}%`;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.opacity = opacity;
+                
+                // 添加到容器
+                container.appendChild(star);
+            }
+        }
+
+        // 页面加载完成后创建星空
+        window.addEventListener('load', function() {
+            createStarField();
+        });
+
+        // 窗口大小改变时重新创建星空
+        window.addEventListener('resize', function() {
+            createStarField();
+        });
+
+        // 性能优化：节流函数
+        function throttle(func, wait) {
+            let timeout = null;
+            return function() {
+                const context = this;
+                const args = arguments;
+                if (!timeout) {
+                    timeout = setTimeout(() => {
+                        func.apply(context, args);
+                        timeout = null;
+                    }, wait);
+                }
+            };
+        }
+
+        // 优化滚动事件
+        const optimizedScrollHandler = throttle(function() {
+            // 滚动相关的处理可以放在这里
+        }, 100);
+
+        window.addEventListener('scroll', optimizedScrollHandler);
+    </script>
+</body>
+</html>
